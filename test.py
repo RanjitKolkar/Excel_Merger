@@ -2,65 +2,65 @@ import streamlit as st
 import pandas as pd
 import io
 
+# Set page config
 st.set_page_config(page_title="Excel Merger", layout="wide")
 
-st.markdown("<h1 style='color:#1f77b4;'>📁 Excel Merger & Visualizer</h1>", unsafe_allow_html=True)
+# App title
+st.markdown("<h1 style='color:#2E8B57;'>📊 Excel Merger & Visualizer (Cloud-Ready)</h1>", unsafe_allow_html=True)
 
-# File uploader (accepts multiple Excel files)
+# Upload multiple Excel files
 uploaded_files = st.file_uploader(
-    "📤 Upload multiple Excel files (.xlsx or .xls):",
+    "📤 Upload one or more Excel files (.xlsx or .xls):",
     type=["xlsx", "xls"],
     accept_multiple_files=True
 )
 
 if uploaded_files:
-    st.success(f"{len(uploaded_files)} file(s) uploaded successfully!")
+    st.success(f"Uploaded {len(uploaded_files)} Excel file(s).")
 
-    # Show list of uploaded files
-    st.markdown("### Files Uploaded:")
-    for f in uploaded_files:
-        st.markdown(f"- 🗂️ `{f.name}`")
+    # Display uploaded file names
+    st.markdown("### 🗂 Uploaded Files")
+    for file in uploaded_files:
+        st.markdown(f"- `{file.name}`")
 
-    if st.button("🔗 Merge and Show Data"):
-        merged_df = pd.DataFrame()
-        dataframes = []
+    if st.button("🔗 Merge Files"):
+        merged_dataframes = []
 
         for file in uploaded_files:
             try:
                 df = pd.read_excel(file)
-                df['Source File'] = file.name  # Track file source
-                dataframes.append(df)
+                df["Source File"] = file.name  # Track the source file
+                merged_dataframes.append(df)
             except Exception as e:
-                st.error(f"❌ Error reading `{file.name}`: {e}")
+                st.error(f"Error reading {file.name}: {e}")
 
-        if dataframes:
-            merged_df = pd.concat(dataframes, ignore_index=True)
-            st.success("✅ Merge successful!")
+        if merged_dataframes:
+            merged_df = pd.concat(merged_dataframes, ignore_index=True)
+            st.success("✅ Files merged successfully!")
 
-            # Show preview
-            st.markdown("### 🧾 Merged Data Preview")
+            # Show merged data
+            st.markdown("### 📋 Merged Data Preview")
             st.dataframe(merged_df, use_container_width=True)
 
-            # Download as Excel
-            output = io.BytesIO()
-            merged_df.to_excel(output, index=False)
+            # Download merged Excel
+            buffer = io.BytesIO()
+            merged_df.to_excel(buffer, index=False)
             st.download_button(
-                label="💾 Download Merged Excel File",
-                data=output.getvalue(),
+                label="💾 Download Merged Excel",
+                data=buffer.getvalue(),
                 file_name="merged_output.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
 
-            # Visualization section
-            st.markdown("### 📊 Visualize a Column")
-            numeric_cols = merged_df.select_dtypes(include="number").columns.tolist()
-
+            # Visualization
+            st.markdown("### 📈 Visualize Numeric Column")
+            numeric_cols = merged_df.select_dtypes(include='number').columns.tolist()
             if numeric_cols:
-                col_to_plot = st.selectbox("Select a numeric column to visualize:", numeric_cols)
-                st.bar_chart(merged_df[col_to_plot])
+                selected_col = st.selectbox("Choose a column to visualize:", numeric_cols)
+                st.bar_chart(merged_df[selected_col])
             else:
-                st.info("No numeric columns found for charting.")
+                st.info("No numeric columns found for visualization.")
         else:
-            st.warning("⚠️ No valid Excel data to merge.")
+            st.warning("⚠️ No valid data found in uploaded files.")
 else:
-    st.info("👈 Upload some Excel files to get started.")
+    st.info("👈 Upload some Excel files to begin.")
